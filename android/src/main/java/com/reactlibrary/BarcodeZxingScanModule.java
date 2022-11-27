@@ -12,10 +12,12 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public class BarcodeZxingScanModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
     private final ReactApplicationContext reactContext;
+    private Callback mCallback;
 
     public BarcodeZxingScanModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -41,7 +43,7 @@ public class BarcodeZxingScanModule extends ReactContextBaseJavaModule implement
 
     @ReactMethod
     public void showQrReader(Callback callback) {
-        Callback mCallback = callback;
+        mCallback = callback;
         IntentIntegrator integrator = new IntentIntegrator(getCurrentActivity());
         integrator.setOrientationLocked(true);
         integrator.setCaptureActivity(ContinuousCaptureActivity.class);
@@ -52,7 +54,9 @@ public class BarcodeZxingScanModule extends ReactContextBaseJavaModule implement
 
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
-
+         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        mCallback.invoke(result.getContents(), result.getBarcodeImagePath());
+        reactContext.removeActivityEventListener(this);
     }
 
     @Override
